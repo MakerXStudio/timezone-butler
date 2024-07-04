@@ -31,10 +31,10 @@ const commandResponse = (
             messageLists.map((message) =>
               message.text
                 ? slackRequest.post('chat.postEphemeral', team._token, {
-                    ...message,
-                    channel: event.channel,
-                    thread_ts: event.thread_ts,
-                  })
+                  ...message,
+                  channel: event.channel,
+                  thread_ts: event.thread_ts,
+                })
                 : Promise.resolve()
             )
           )
@@ -55,7 +55,7 @@ const commandResponse = (
     .then(() => 'sent command response')
 
 const handleSlackMessage = async (
-  { team_id, bot_id }: { team_id: string; bot_id: string },
+  { team_id, bot_id }: { team_id: string; bot_id?: string },
   event: {
     type: 'app_uninstalled' | 'message' | 'app_home_opened'
     channel_type: 'app_home' | 'im'
@@ -127,11 +127,11 @@ const handleSlackMessage = async (
     messageBuilder(team, event.user, times).map(({ user, text }) =>
       text
         ? slackRequest.post('chat.postEphemeral', team._token, {
-            channel: event.channel,
-            user,
-            text,
-            thread_ts: event.thread_ts,
-          })
+          channel: event.channel,
+          user,
+          text,
+          thread_ts: event.thread_ts,
+        })
         : Promise.resolve()
     )
   ).then(() => 'time translations sent')
@@ -156,14 +156,26 @@ export default async function (body: {
     channel: string
     thread_ts: string
   }
-  authed_users: string[]
+  authorizations: {
+    enterprise_id?: string
+    team_id: string
+    user_id: string
+    is_bot: boolean
+    is_enterpries_install: boolean
+  }[]
 }) {
   if (body.type !== 'event_callback' || !body.event) {
     return 'not sure how to handle that...'
   }
 
-  const { event, authed_users } = body
-  const bot_id = authed_users[0]
+  const { event, authorizations } = body
+  const bot_id = (() => {
+    if (authorizations.length > 0) {
+      return authorizations[0]['user_id']
+    } else {
+      return undefined;
+    }
+  })()
 
   if (event.type === 'app_uninstalled') {
     return handleUninstall(body)
