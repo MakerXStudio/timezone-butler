@@ -72,6 +72,11 @@ export default function Contact() {
           <li>
             <a href="https://mathieu.dutour.me">Website</a>
           </li>
+          <li>
+            <a href="mailto:mat.dutour+timezonebutler@gmail.com">
+              Email
+            </a>
+          </li>
         </ul>
       </div>
     </Layout>
